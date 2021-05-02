@@ -17,23 +17,34 @@ import java.util.*
 fun Route.depositWithdrawByName() {
     route("/depositWithdrawByName") {
         post {
-            val userName: String = this.context.request.queryParameters["userName"]!!
+            val userName: String = this.context.request.queryParameters["userName"]!! // it cant be null
             val movement: String = this.context.request.queryParameters["movement"]!!
             val type: String = this.context.request.queryParameters["type"]!!
 
 
-            transaction {
+            val result: Boolean = transaction {
+                val userId = UserTable.select { UserTable.userName eq userName }.singleOrNull()?.get(UserTable.id)?.value // ? = stop if null ie 2 conditions here
 
-                //val current = AccountTable.name eq userName2
-                val tempID = UserTable.select { UserTable.userName eq userName }.single()[UserTable.id].value
+                return@transaction if (userId != null) {
 
-                AccountTable.update({ (AccountTable.userId eq tempID) and (AccountTable.type eq type) }) {
-                    with(SqlExpressionBuilder) {
-                        it.update(AccountTable.balance, AccountTable.balance + movement.toDouble())
+                    AccountTable.update({ (AccountTable.userId eq userId) and (AccountTable.type eq type) }) {
+                        with(SqlExpressionBuilder) {
+                            it.update(AccountTable.balance, AccountTable.balance + movement.toDouble())
+                        }
                     }
+                    println("user found")
+                    true
+                }
+                else{
+                    println("user name doesn't exist, please provide a valid username")
+                    false
                 }
             }
-            this.context.respond("success")
+
+            when (result) {
+                true -> this.context.respond("success")
+                false -> this.context.respond("failed")
+            }
         }
     }
 }
@@ -171,7 +182,7 @@ fun Route.netValue() {
                 val statement = conn.prepareStatement(query, false)
                 statement.fillParameters(
                     listOf(
-                        UUIDColumnType() to "66ebc2fc-2aa6-48db-b2cd-16e81250c50e", // change it to var
+                        UUIDColumnType() to "66ebc2fc-2aa6-48db-b2cd-16e81250c50e", // change it to var----------------
                         UUIDColumnType() to "66ebc2fc-2aa6-48db-b2cd-16e81250c50e"
                     )
                 );
