@@ -25,7 +25,7 @@ fun Route.createAccount() {
                     this.balance = 0.00
                 }
             }
-            this.context.respond("success")
+            this.context.respondText("success")
         }
     }
 }

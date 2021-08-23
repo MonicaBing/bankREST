@@ -2,6 +2,7 @@ package banking.web.transaction
 
 import banking.db.account.AccountTable
 import banking.db.transaction.PayeeTransaction
+import banking.db.transaction.PayeeTransactionTable
 import banking.db.transaction.ReceiveTransaction
 import banking.db.user.UserTable
 import io.ktor.response.*
@@ -23,7 +24,8 @@ fun Route.depositWithdrawByName() {
 
 
             val result: Boolean = transaction {
-                val userId = UserTable.select { UserTable.userName eq userName }.singleOrNull()?.get(UserTable.id)?.value // ? = stop if null ie 2 conditions here
+                val userId = UserTable.select { UserTable.userName eq userName }.singleOrNull()
+                    ?.get(UserTable.id)?.value // ? = stop if null ie 2 conditions here
 
                 return@transaction if (userId != null) {
 
@@ -34,8 +36,7 @@ fun Route.depositWithdrawByName() {
                     }
                     println("user found")
                     true
-                }
-                else{
+                } else {
                     println("user name doesn't exist, please provide a valid username")
                     false
                 }
@@ -190,13 +191,34 @@ fun Route.netValue() {
                 while (resultSet.next()) {
                     result[UUID.fromString(resultSet.getString(1))] = resultSet.getLong(2)
                 }
-
-                //return result
             }
+            // return result
             this.context.respond(result)
         }
     }
 }
 
+fun Route.displayTransaction() {
+    route("/displayTransaction") {
+        get {
+            val accountId = this.context.request.queryParameters["receive"]!! // input
+            // 53574606-2fdd-4612-85bf-ddda45882865
 
+            val result = transaction {
 
+                val result = PayeeTransactionTable.select {
+                    PayeeTransactionTable.accId eq UUID.fromString(accountId)
+                }
+                // println(result.toList())
+                return@transaction result.toList()
+            }
+            this.context.respond(result.map { //exactly what we should see in front end,
+                TransactionDto( // map it into the format that we want
+                    it[PayeeTransactionTable.accId],
+                    it[PayeeTransactionTable.payment]
+                )
+            })
+        }
+    }
+}
+// result == all -> feed it back to front end
