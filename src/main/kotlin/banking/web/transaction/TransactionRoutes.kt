@@ -127,7 +127,7 @@ fun Route.paymentName() {
 
                 PayeeTransaction.new {
                     this.accId =
-                        UserTable.select { (AccountTable.userId eq payeeUserId) and (AccountTable.type eq payeeType) }
+                        AccountTable.select {(AccountTable.userId eq payeeUserId) and (AccountTable.type eq payeeType)}
                             .single()[AccountTable.id].value
                     this.payment = payment.toDouble()
                     this.time = time
@@ -136,7 +136,7 @@ fun Route.paymentName() {
 
                 ReceiveTransaction.new {
                     this.accId =
-                        UserTable.select { (AccountTable.userId eq receiveUserId) and (AccountTable.type eq receiveType) }
+                        AccountTable.select { (AccountTable.userId eq receiveUserId) and (AccountTable.type eq receiveType) }
                             .single()[AccountTable.id].value
                     this.payment = payment.toDouble()
                     this.time = time
@@ -183,7 +183,7 @@ fun Route.netValue() {
                 val statement = conn.prepareStatement(query, false)
                 statement.fillParameters(
                     listOf(
-                        UUIDColumnType() to "66ebc2fc-2aa6-48db-b2cd-16e81250c50e", // change it to var----------------
+                        UUIDColumnType() to "66ebc2fc-2aa6-48db-b2cd-16e81250c50e", //refer to the ? above
                         UUIDColumnType() to "66ebc2fc-2aa6-48db-b2cd-16e81250c50e"
                     )
                 );
@@ -198,13 +198,14 @@ fun Route.netValue() {
     }
 }
 
+// duisplay specfiically for one account
 fun Route.displayTransaction() {
     route("/displayTransaction") {
         get {
             val accountId = this.context.request.queryParameters["receive"]!! // input
             // 53574606-2fdd-4612-85bf-ddda45882865
 
-            val result = transaction {
+            val result: List<ResultRow> = transaction {
 
                 val result = PayeeTransactionTable.select {
                     PayeeTransactionTable.accId eq UUID.fromString(accountId)
@@ -212,7 +213,7 @@ fun Route.displayTransaction() {
                 // println(result.toList())
                 return@transaction result.toList()
             }
-            this.context.respond(result.map { //exactly what we should see in front end,
+            this.context.respond(result.map { //exactly what we should see in front end, test it on postman
                 TransactionDto( // map it into the format that we want
                     it[PayeeTransactionTable.accId],
                     it[PayeeTransactionTable.payment]
@@ -222,3 +223,55 @@ fun Route.displayTransaction() {
     }
 }
 // result == all -> feed it back to front end
+
+// display for all accounts
+// mapping in transactionDto -> class users
+fun Route.displayUsers() {
+    route("/displayUsers") {
+        get {
+            val result: List<ResultRow> = transaction {
+                val result = UserTable.selectAll()
+
+                return@transaction result.toList()
+            }
+            this.context.respond(result.map {
+                UsersDto(
+                    it[UserTable.id].value, // key
+                    it[UserTable.name],
+                    it[UserTable.userName]
+                )
+            })
+        }
+    }
+}
+
+fun Route.displayAccounts() {
+    route("/displayAccounts") {
+        get {
+            val userId = UUID.fromString(this.context.request.queryParameters["userId"]!!) // fa2e3041-c130-4663-aa5e-4b4e5bad9bbe
+
+
+            val result: List<ResultRow> = transaction {
+
+                // condition select all
+                val userId = AccountTable.select {AccountTable.userId eq userId}.toList()
+
+
+                // val result = AccountTable .selectAll()
+
+                return@transaction userId
+            }
+            this.context.respond(result.map {
+                AccountsDto(
+                    it[AccountTable.id].value, // key
+                    it[AccountTable.userId],
+                    it[AccountTable.type],
+                    it[AccountTable.balance]
+                )
+            })
+            this.context.respond("success")
+        }
+
+    }
+}
+

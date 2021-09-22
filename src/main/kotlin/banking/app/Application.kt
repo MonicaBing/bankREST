@@ -88,6 +88,9 @@ fun Application.module(){
         getAccountsForUser()
         netValue()
         displayTransaction()
+        displayUsers()
+        displayAccounts()
+
     }
 }
 
