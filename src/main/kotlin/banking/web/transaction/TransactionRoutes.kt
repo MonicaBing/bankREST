@@ -4,6 +4,7 @@ import banking.db.account.AccountTable
 import banking.db.transaction.PayeeTransaction
 import banking.db.transaction.PayeeTransactionTable
 import banking.db.transaction.ReceiveTransaction
+import banking.db.transaction.ReceiveTransactionTable
 import banking.db.user.UserTable
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -202,21 +203,23 @@ fun Route.netValue() {
 fun Route.displayTransaction() {
     route("/displayTransaction") {
         get {
-            val accountId = this.context.request.queryParameters["receive"]!! // input
-            // 53574606-2fdd-4612-85bf-ddda45882865
+            val accId = UUID.fromString(this.context.request.queryParameters["receive"]!!) // input
+            // 5c934ceb-d797-453f-a53e-1fe641c2978b
 
             val result: List<ResultRow> = transaction {
 
-                val result = PayeeTransactionTable.select {
-                    PayeeTransactionTable.accId eq UUID.fromString(accountId)
-                }
-                // println(result.toList())
-                return@transaction result.toList()
+                val result = ReceiveTransactionTable.select{ReceiveTransactionTable.accId eq accId}.toList()
+
+//                val result = PayeeTransactionTable.select {
+//                    PayeeTransactionTable.accId eq UUID.fromString(accountId)
+//                }
+//                // println(result.toList())
+                return@transaction result
             }
             this.context.respond(result.map { //exactly what we should see in front end, test it on postman
                 TransactionDto( // map it into the format that we want
-                    it[PayeeTransactionTable.accId],
-                    it[PayeeTransactionTable.payment]
+                    it[ReceiveTransactionTable.accId],
+                    it[ReceiveTransactionTable.payment]
                 )
             })
         }
@@ -248,8 +251,8 @@ fun Route.displayUsers() {
 fun Route.displayAccounts() {
     route("/displayAccounts") {
         get {
-            val userId = UUID.fromString(this.context.request.queryParameters["userId"]!!) // fa2e3041-c130-4663-aa5e-4b4e5bad9bbe
-
+            //val userId = this.context.request.queryParameters["userId"]!! // fa2e3041-c130-4663-aa5e-4b4e5bad9bbe
+            val userId = UUID.fromString(this.context.request.queryParameters["userId"]!!)
 
             val result: List<ResultRow> = transaction {
 
