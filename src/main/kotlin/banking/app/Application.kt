@@ -1,28 +1,25 @@
 // exposed
 package banking.app
 
-import banking.*
 import banking.db.account.AccountTable
 import banking.db.transaction.PayeeTransactionTable
 import banking.db.transaction.ReceiveTransactionTable
 import banking.db.user.UserTable
-import banking.web.account.createAccount
+import banking.web.account.accounts
 import banking.web.account.deleteAccount
 import banking.web.account.getAccountsForUser
 import banking.web.transaction.*
-import banking.web.user.createUser
-import banking.web.user.updateName
+import banking.web.user.users
+import banking.web.user.usernames
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.jackson.*
 import io.ktor.routing.*
-import io.ktor.serialization.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.event.Level
-import org.slf4j.LoggerFactory
 
 // entry point
 fun main(args:Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -78,13 +75,13 @@ fun Application.module(){
 
 
     routing {
-        createUser()
-        createAccount()
+        users()
+        accounts()
         depositWithdrawByName()
         deleteAccount()
         paymentId()
         paymentName()
-        updateName()
+        usernames()
         getAccountsForUser()
         netValue()
         displayTransaction()

@@ -3,6 +3,8 @@ package banking.web.account
 import banking.db.account.Account
 import banking.db.account.AccountTable
 import banking.db.user.UserTable
+import io.ktor.application.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import org.jetbrains.exposed.sql.deleteWhere
@@ -11,21 +13,34 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 // create account for each user
-fun Route.createAccount() {
-    route("/createAccount") {
-        post {
-            val userName = this.context.request.queryParameters["userName"]!!
-            val type = this.context.request.queryParameters["type"]!!
 
+class AccountDto(
+    val userId: UUID,
+    val type: String,
+)
 
-            transaction {
-                Account.new {
-                    this.type = type
-                    this.userId = UserTable.select { UserTable.userName eq userName }.single()[UserTable.id].value
-                    this.balance = 0.00
+fun Route.accounts() {
+    route("/accounts") {
+        post ("/") {
+//            val userId = UUID.fromString(this.context.request.queryParameters["userId"]!!) // from username to id
+//            val type = this.context.request.queryParameters["type"]!!
+
+            val account = call.receive<AccountDto>()
+
+            transaction<String> {
+                 if (UserTable.select { UserTable.id eq account.userId }.singleOrNull() != null) {
+
+                    Account.new {
+                        this.type = account.type
+                        this.userId = account.userId
+                        this.balance = 0.00
+                    }
+                    "create new account for this user id success"
+                } else{
+                    "user id not found"
                 }
             }
-            this.context.respondText("success")
+
         }
     }
 }

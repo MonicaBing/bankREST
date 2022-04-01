@@ -2,56 +2,73 @@ package banking.web.user
 
 import banking.db.user.User
 import banking.db.user.UserTable
+import io.ktor.application.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import java.lang.NullPointerException
 
-fun Route.createUser() {
-    route("/createUser") {
-        post {
-            // get the customer name from postman
-            val userName = this.context.request.queryParameters["userName"]!!
-            val name = this.context.request.queryParameters["name"]!!
+// users
+class UserDto(
+    val userName: String,
+    val name: String
+)
 
-
+// create new users
+fun Route.users() {
+    route("/users") {
+        post("/") {
+            //---- REST API bit
+            // 1. add in body in client request, with the variables and type
+            // 2. get the body like below and do the same trannsaction
+            val user =call.receive<UserDto>()
 
             transaction {
                 User.new {
-                    this.userName = userName
-                    this.name = name
+                    this.userName = user.userName
+                    this.name = user.name
+                    // new uuid - ID - i.e. auto
                 }
             }
-            this.context.respond("success")
+            this.context.respond("create users success")
         }
     }
 }
 
-// ignore for now
-// can update user name or name
-fun Route.updateName() {
-    route("/updateName") {
-        post {
-            val oldName: String = this.context.request.queryParameters["oldName"]!!
-            val currentUserName: String = this.context.request.queryParameters["current_userName"]!!
-            val newName: String = this.context.request.queryParameters["newName"]!!
+// update user name
 
-//            val oldUserName: String = this.context.request.queryParameters["old_userName"]!!
-//            val currentName: String = this.context.request.queryParameters["current_name"]!!
-//            val newUserName : String = this.context.request.queryParameters["new_userName"]!!
+class UsernameDto(
+    val oldName: String = "",
+    val currentUserName: String = "" ,
+    val newName: String = ""
+)
+
+fun Route.usernames() {
+    route("/users") {
+        // update
+        put ("/{userName}"){
+//            val oldName: String = this.context.request.queryParameters["oldName"]!!
+//            val currentUserName: String = this.context.request.queryParameters["current_userName"]!!
+//            val newName: String = this.context.request.queryParameters["newName"]!!
+            val username= call.receive<UserDto>()
+
+            val oldUserName: String = this.context.parameters["userName"]!!
 
             transaction {
-                UserTable.update({ (UserTable.name eq oldName) and (UserTable.userName eq currentUserName) }) {
-                    it[name] = newName
+                // old parameters - URL
+                UserTable.update({ UserTable.userName eq oldUserName }) {
+                    it[name] = username.userName
                 }
 
 //                AccountTable.update({(AccountTable.userName eq oldUserName) and (AccountTable.name eq currentName)}){
 //                    it[userName] = newUserName
 //                }
             }
-            this.context.respond("success")
+            this.context.respond("update user name success")
         }
-
     }
 }
