@@ -7,7 +7,7 @@ import banking.db.transaction.ReceiveTransactionTable
 import banking.db.user.UserTable
 import banking.web.account.accounts
 import banking.web.account.deleteAccount
-import banking.web.account.getAccountsForUser
+import banking.web.account.userAccounts
 import banking.web.transaction.*
 import banking.web.user.users
 import banking.web.user.usernames
@@ -82,7 +82,7 @@ fun Application.module(){
         paymentId()
         paymentName()
         usernames()
-        getAccountsForUser()
+        userAccounts()
         netValue()
         displayTransaction()
         displayUsers()
